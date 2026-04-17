@@ -1,0 +1,130 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required) - User's Firebase Auth UID
+    //   - email: string (required, email format)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - bias: string (required, ['None', 'Karina', 'Winter', 'Giselle', 'Ningning'])
+    //   - roomAtmosphere: string (required, ['Standard', 'Neon', 'Void'])
+    //   - stats: map (required)
+    //     - level: number (required)
+    //     - experience: number (required)
+    //     - crystals: number (required)
+    //     - completed_goals: number (required)
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: users/{uid}/goals
+    // Document ID: {goalId}
+    // Fields:
+    //   - id: string (required)
+    //   - uid: string (required) - Must match parent userId
+    //   - title: string (required, 1-100 chars)
+    //   - type: string (required, ['pulse', 'orbit', 'galaxy'])
+    //   - completed: bool (required)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    
+    function isValidUser(data) {
+      return data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'bias', 'roomAtmosphere', 'stats', 'createdAt', 'updatedAt']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             data.bias in ['None', 'Karina', 'Winter', 'Giselle', 'Ningning'] &&
+             data.roomAtmosphere in ['Standard', 'Neon', 'Void'] &&
+             data.stats is map &&
+             data.stats.level is number && data.stats.level >= 1 &&
+             data.stats.experience is number && data.stats.experience >= 0 &&
+             data.stats.crystals is number && data.stats.crystals >= 0 &&
+             data.stats.completed_goals is number && data.stats.completed_goals >= 0 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidGoal(data, userId) {
+      return data.keys().hasOnly(['id', 'uid', 'title', 'type', 'completed', 'createdAt']) &&
+             data.uid == userId &&
+             data.uid == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.type in ['pulse', 'orbit', 'galaxy'] &&
+             data.completed is bool &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidEntry(data, userId) {
+      return data.keys().hasAny(['uid', 'content', 'createdAt']) &&
+             data.uid == userId &&
+             data.uid == request.auth.uid &&
+             data.content is string && data.content.size() <= 5000 &&
+             (!('imageUrl' in data) || isValidUrl(data.imageUrl)) &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) &&
+                      request.resource.data.createdAt == resource.data.createdAt;
+      
+      match /goals/{goalId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidGoal(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidGoal(request.resource.data, userId) &&
+                        request.resource.data.id == resource.data.id &&
+                        request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(userId);
+      }
+
+      match /entries/{entryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidEntry(request.resource.data, userId);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Inter:wght@300;400;500;600&family=Noto+Serif+TC:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-synk-bg: #050508;
+  --color-synk-pink: #FF4DCC;
+  --color-synk-blue: #4D94FF;
+  --color-synk-lavender: #B388FF;
+  --color-synk-glass: rgba(255, 255, 255, 0.05);
+  --color-synk-border: rgba(255, 255, 255, 0.1);
+  --font-serif: "Bodoni Moda", serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-zh-serif: "Noto Serif TC", serif;
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  --animate-shimmer: shimmer 3s linear infinite;
+}
+
+@utility perspective-1000 {
+  perspective: 1000px;
+}
+
+@utility vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+@utility stretched-text {
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-synk-bg);
+    color: white;
+    font-family: var(--font-sans);
+    overflow: hidden;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Global scrollbar hide while keeping functionality */
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.high-fashion-header {
+  font-family: var(--font-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-weight: 500;
+}

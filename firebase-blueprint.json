@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user profile and app preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "bias": { "type": "string", "enum": ["None", "Karina", "Winter", "Giselle", "Ningning"] },
+        "roomAtmosphere": { "type": "string", "enum": ["Standard", "Neon", "Void"] },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "level": { "type": "number" },
+            "experience": { "type": "number" },
+            "crystals": { "type": "number" },
+            "completed_goals": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "bias", "roomAtmosphere"]
+    },
+    "Goal": {
+      "title": "User Goal",
+      "description": "Stores a single user goal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["pulse", "orbit", "galaxy"] },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "title", "type", "completed"]
+    },
+    "JournalEntry": {
+      "title": "Journal Entry",
+      "description": "A personal experience log with spatial metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "coords": { "type": "string" }
+          }
+        },
+        "lyrics": { "type": "string" },
+        "mood": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profile document"
+    },
+    "/users/{uid}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "User specific goals subcollection"
+    },
+    "/users/{uid}/entries/{entryId}": {
+      "schema": "JournalEntry",
+      "description": "Spatial archiving journal entries"
+    }
+  }
+}

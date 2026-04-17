@@ -1,0 +1,6 @@
+{
+  "name": "SYNKIFY",
+  "description": "A high-fashion spatial archiving and resonance portal for the aespa community.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
